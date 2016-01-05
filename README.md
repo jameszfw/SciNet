@@ -1,12 +1,28 @@
 # SciNet
 SciNet is a multi-core based, high performance machine learning framework on top of Spark, supporting both data parallel and model parallel in massive scale.
 
+# Features
+Topology: Flexible network topology construction.
+
+Algorithms: Denoising Auto-encoder, RBM, Stacking, Convolutional Neural Net, LSTM, Bidirectional-LSTM, Conjugate Gradient, L-BFGS, L1/L2/MaxNorm Regularization, DropOut, Momentum, Nesterov, and various Squashing functions.
+
 ## Components
-Parameter Server, Models, Solver
-One System consists of parameter servers, replicated models, and solvers. Each of them are orgnized as a RDD in Spark, consists of multiple partitions.
+The system consists of three major components, Parameter Server, Models, and Solver.
+
+Each of them is orgnized as a RDD, and may consists of mulitple partitions. Note that there may be mulitple model Rdd.
+
+Consider following scenario in training a model.
+
+1. Data Parallel: Because the training data is huge, the system spawn 10 replicated models, each of them trains on one tenth of the data.
+2. Model Parallel: Because the model is huge, each replicated models are distributed to 5 machines to overcome memory limitation and cpu bottleneck.
+
+In such case, the system will have 
+1. One Parameter RDD: consists of 5 partitions, with each partition corresponds to one partitions of the model.
+2. 10 Model RDDs: there are 10 replicated model rdd, with each of them consists of 5 partitions.
+3. 1 Solver RDD to control the whole process of the training.
 
 ## Parameter Server
-The parameter server is the central repo for the system state. It is orgnized as a RDD with mulitple partitions. How the RDD is partitioned is decided by the partitions used in Model Parallel (discussed later).
+The parameter server is the central repo for the system state. It is orgnized as a RDD with mulitple partitions. How the RDD is partitioned is determined by the partitions used in Model Parallel (discussed later).
 
 It receives parameter update from sub-models, aggregates and feeds updated parameters to sub-models.
 
